@@ -19,7 +19,7 @@ whole project — the Phase 1 vs. Phase 2 ping matrix comparison.
                                           |
                                      [ ASAv0 ]     (perimeter FW — configured Phase 2)
                                           |
-                                 Gi0/1 ---+--- trunk
+                                          |
                                           |
                                   [ L3-Core ]  (multilayer switch)
                           /         |          |            \
