@@ -23,7 +23,7 @@ whole project — the Phase 1 vs. Phase 2 ping matrix comparison.
                                           |
                                   [ L3-Core ]  (multilayer switch)
                           /         |          |            \
-                     Fa0/1       Fa0/2      Fa0/3-5        (direct)
+                     Fa0/1       Fa0/2      Fa0/3-4        (direct)Fa0/5
                        |            |          |              |
                  [Access-SW1]  [Access-SW2]  SYS-AAA /      WEB-DMZ
                                               DNS-DHCP     (public-facing)
