@@ -1,0 +1,25 @@
+*Aug 06, 18:16:46.1616:  %SYS-6-LOGGINGHOST_STARTSTOP: Logging to host 10.10.30.3 port 514 started - CLI initiated
+
+*Aug 06, 18:16:46.1616: %LINK-3-UPDOWN: Interface Vlan10, changed state to down
+
+*Aug 06, 18:16:46.1616: %LINK-5-CHANGED: Interface Vlan10, changed state to up
+
+*Aug 06, 18:16:46.1616: %LINK-5-CHANGED: Interface FastEthernet0/2, changed state to up
+
+*Aug 06, 18:16:46.1616: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to up
+
+*Aug 06, 18:16:46.1616: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan10, changed state to up
+
+*Aug 06, 18:16:46.1616: %LINK-5-CHANGED: Interface FastEthernet0/3, changed state to up
+
+*Aug 06, 18:16:46.1616: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/3, changed state to up
+
+*Aug 06, 18:16:46.1616: %LINK-5-CHANGED: Interface FastEthernet0/4, changed state to up
+
+*Aug 06, 18:16:46.1616: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/4, changed state to up
+
+*Aug 06, 18:16:46.1616: %LINK-5-CHANGED: Interface FastEthernet0/1, changed state to up
+
+*Aug 06, 18:16:46.1616: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up
+
+*Aug 08, 01:06:14.066: SYS-5-CONFIG_I: Configured from console by console

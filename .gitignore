@@ -1,0 +1,3 @@
+azure-ingestion/venv/
+azure-ingestion/.env
+.vscode/
