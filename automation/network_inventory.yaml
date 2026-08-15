@@ -1,0 +1,89 @@
+devices:
+  - name: L3-Core
+    type: l3_switch
+    vlans:
+      - {id: 10, name: MGMT,    subnet: 10.10.10.0/24, gateway: 10.10.10.1}
+      - {id: 20, name: USERS,   subnet: 10.10.20.0/24, gateway: 10.10.20.1}
+      - {id: 30, name: SERVERS, subnet: 10.10.30.0/24, gateway: 10.10.30.1}
+      - {id: 99, name: NATIVE_UNUSED}
+    # NOTE: VLAN 40 (DMZ) intentionally not present here — DMZ now lives
+    # directly on ASAv0's own interface (three-legged firewall design,
+    # see docs/phase2-segmentation.md), not on L3-Core.
+    helper_addresses:
+      - {vlan: 10, dhcp_server: 10.10.30.2}
+      - {vlan: 20, dhcp_server: 10.10.30.2}
+    routed_interfaces:
+      - {port: GigabitEthernet0/1, ip: 10.10.1.6, mask: 255.255.255.252}
+    trunk_ports:
+      - {port: FastEthernet0/1, native_vlan: 99, allowed_vlans: "10,20,99", acl: USERS-OUT}
+      - {port: FastEthernet0/2, native_vlan: 99, allowed_vlans: "10,20,99", acl: USERS-OUT}
+    access_ports:
+      - {port: FastEthernet0/3, vlan: 30, acl: SERVERS-OUT}
+      - {port: FastEthernet0/4, vlan: 30, acl: SERVERS-OUT}
+    logging_host: 10.10.30.3
+    ntp_server: 10.10.30.3
+    acls:
+      - name: USERS-OUT
+        rules:
+          # MGMT traffic also crosses these trunk ports — must be permitted
+          # first, since it's otherwise unmatched by every USERS-scoped rule
+          # below and falls into the implicit deny (found during Phase 3).
+          - {action: permit, src: 10.10.10.0/24, dst: any}
+          - {action: permit, proto: udp, src: 10.10.20.0/24, dst_host: 10.10.30.2, port: 53}
+          - {action: permit, proto: tcp, src: 10.10.20.0/24, dst_host: 10.10.30.2, port: 53}
+          - {action: permit, proto: udp, src: 10.10.20.0/24, dst_host: 10.10.30.2, port: 67}
+          - {action: permit, proto: udp, src: 10.10.20.0/24, dst_host: 10.10.30.2, port: 68}
+          # syslog to SYS-AAA — without this, USERS-OUT silently blocks the
+          # monitoring pipeline's own traffic (found during Phase 3)
+          - {action: permit, proto: udp, src: 10.10.20.0/24, dst_host: 10.10.30.3, port: 514}
+          - {action: permit, proto: tcp, src: 10.10.20.0/24, dst_host: 10.10.40.10, port: 80}
+          - {action: permit, proto: tcp, src: 10.10.20.0/24, dst_host: 10.10.40.10, port: 443}
+          - {action: deny, src: 10.10.20.0/24, dst: 10.10.30.0/24}
+          - {action: deny, src: 10.10.20.0/24, dst: 10.10.10.0/24}
+          - {action: deny, src: 10.10.20.0/24, dst: 10.10.40.0/24}
+          # scoped to the actual source subnet, not "any", so this ACL
+          # only ever permits traffic genuinely originating from VLAN 20
+          - {action: permit, src: 10.10.20.0/24, dst: any}
+      - name: SERVERS-OUT
+        rules:
+          - {action: deny, src: 10.10.30.0/24, dst: 10.10.40.0/24}
+          - {action: permit, src: 10.10.30.0/24, dst: any}
+
+  - name: Access-SW1
+    type: access_switch
+    vlans: [10, 20, 99]
+    trunk_uplink:
+      port: FastEthernet0/24
+      native_vlan: 99
+      allowed_vlans: "10,20,99"
+      acl: USERS-OUT
+    access_ports:
+      - {port_range: "FastEthernet0/2 - 4", vlan: 20, port_security_max: 2}
+      - {port: FastEthernet0/1, vlan: 10}
+    management:
+      vlan_interface: 10
+      ip: 10.10.10.250
+      mask: 255.255.255.0
+      default_gateway: 10.10.10.1
+    logging_host: 10.10.30.3
+    ntp_server: 10.10.30.3
+
+  - name: Access-SW2
+    type: access_switch
+    vlans: [10, 20, 99]
+    trunk_uplink:
+      port: FastEthernet0/24
+      native_vlan: 99
+      allowed_vlans: "10,20,99"
+      acl: USERS-OUT
+    access_ports:
+      - {port_range: "FastEthernet0/2 - 4", vlan: 20, port_security_max: 2}
+      - {port: FastEthernet0/1, vlan: 10}
+    management:
+      vlan_interface: 10
+      ip: 10.10.10.251
+      mask: 255.255.255.0
+      default_gateway: 10.10.10.1
+    logging_host: 10.10.30.3
+    ntp_server: 10.10.30.3
+    

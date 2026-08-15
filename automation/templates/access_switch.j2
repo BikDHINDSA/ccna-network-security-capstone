@@ -1,0 +1,51 @@
+hostname {{ device.name }}
+!
+{% for vid in device.vlans %}
+vlan {{ vid }}
+{% endfor %}
+!
+{% if device.management is defined %}
+interface vlan {{ device.management.vlan_interface }}
+ ip address {{ device.management.ip }} {{ device.management.mask }}
+ no shutdown
+!
+{% endif %}
+{% if device.management is defined %}
+ip default-gateway {{ device.management.default_gateway }}
+!
+{% endif %}
+{% if device.trunk_uplink is defined %}
+interface {{ device.trunk_uplink.port }}
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan {{ device.trunk_uplink.native_vlan }}
+ switchport trunk allowed vlan {{ device.trunk_uplink.allowed_vlans }}
+{% if device.trunk_uplink.acl is defined %}
+ ip access-group {{ device.trunk_uplink.acl }} in
+{% endif %}
+!
+{% endif %}
+{% for port in device.access_ports %}
+{% if port.port_range is defined %}
+interface range {{ port.port_range }}
+{% else %}
+interface {{ port.port }}
+{% endif %}
+ switchport mode access
+ switchport access vlan {{ port.vlan }}
+{% if port.port_security_max is defined %}
+ switchport port-security
+ switchport port-security maximum {{ port.port_security_max }}
+ switchport port-security violation restrict
+{% endif %}
+!
+{% endfor %}
+{% if device.logging_host is defined %}
+logging host {{ device.logging_host }}
+logging trap informational
+logging on
+service timestamps log datetime msec
+{% endif %}
+{% if device.ntp_server is defined %}
+ntp server {{ device.ntp_server }}
+{% endif %}

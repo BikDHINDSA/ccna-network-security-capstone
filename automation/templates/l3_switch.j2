@@ -1,0 +1,71 @@
+hostname {{ device.name }}
+!
+{% for vlan in device.vlans %}
+vlan {{ vlan.id }}
+ name {{ vlan.name }}
+{% endfor %}
+!
+ip routing
+!
+{% for vlan in device.vlans if vlan.gateway is defined %}
+interface vlan {{ vlan.id }}
+ ip address {{ vlan.gateway }} {{ vlan.subnet | netmask }}
+{% for h in device.helper_addresses if h.vlan == vlan.id %}
+ ip helper-address {{ h.dhcp_server }}
+{% endfor %}
+ no shutdown
+{% endfor %}
+!
+{% for iface in device.routed_interfaces %}
+interface {{ iface.port }}
+ no switchport
+ ip address {{ iface.ip }} {{ iface.mask }}
+ no shutdown
+{% endfor %}
+!
+{% for trunk in device.trunk_ports %}
+interface {{ trunk.port }}
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan {{ trunk.native_vlan }}
+ switchport trunk allowed vlan {{ trunk.allowed_vlans }}
+{% if trunk.acl is defined %}
+ ip access-group {{ trunk.acl }} in
+{% endif %}
+{% endfor %}
+!
+{% for port in device.access_ports %}
+interface {{ port.port }}
+ switchport mode access
+ switchport access vlan {{ port.vlan }}
+{% if port.acl is defined %}
+ ip access-group {{ port.acl }} in
+{% endif %}
+{% endfor %}
+!
+{% if device.logging_host is defined %}
+logging host {{ device.logging_host }}
+logging trap informational
+logging on
+service timestamps log datetime msec
+{% endif %}
+{% if device.ntp_server is defined %}
+ntp server {{ device.ntp_server }}
+{% endif %}
+!
+{% for acl in device.acls %}
+ip access-list extended {{ acl.name }}
+{% for rule in acl.rules %}
+{% if rule.dst_host is defined %}
+ {{ rule.action }} {{ rule.proto }} {{ rule.src | ciscowildcard }} host {{ rule.dst_host }} eq {{ rule.port }}
+{% elif rule.dst == "any" %}
+ {{ rule.action }} ip {{ rule.src | ciscowildcard }} any
+{% else %}
+ {{ rule.action }} ip {{ rule.src | ciscowildcard }} {{ rule.dst | ciscowildcard }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{# NOTE: the "log" keyword is deliberately never emitted — confirmed rejected
+   by this Packet Tracer version's IOS image on extended ACL lines (see
+   docs/phase2-segmentation.md, PT-specific constraints). Emitting it here
+   would generate config that fails to apply. #}
